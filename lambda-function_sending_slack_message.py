@@ -31,10 +31,15 @@ import json
 import logging
 import os
 
+from datetime import datetime
+from datetime import timedelta
 from base64 import b64decode
 from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
 
+#사용자 정의 변수 추가
+PROJECT = os.environ['Project']
+ENVIRONMENT = os.environ['Environment']
 
 # The base-64 encoded, encrypted key (CiphertextBlob) stored in the kmsEncryptedHookUrl environment variable
 ENCRYPTED_HOOK_URL = os.environ['kmsEncryptedHookUrl']
@@ -55,16 +60,34 @@ def lambda_handler(event, context):
     message = json.loads(event['Records'][0]['Sns']['Message'])
     logger.info("Message: " + str(message))
 
+    # alarm_name = message['AlarmName']
+    # #old_state = message['OldStateValue']
+    # new_state = message['NewStateValue']
+    # reason = message['NewStateReason']
+
+    # slack_message = {
+    #     'channel': SLACK_CHANNEL,
+    #     'text': "%s state is now %s: %s" % (alarm_name, new_state, reason)
+    # }
+
     alarm_name = message['AlarmName']
-    #old_state = message['OldStateValue']
     new_state = message['NewStateValue']
     reason = message['NewStateReason']
+    account = message['AWSAccountId']
+    time = message['StateChangeTime'][:19]
+    real_time = datetime.strptime(time, '%Y-%m-%dT%H:%M:%S') - timedelta(hours=-9)
+  
+    if(message['Trigger']['Dimensions']):
+        resource_type=message['Trigger']['Dimensions'][0]['name']
+        resource = message['Trigger']['Dimensions'][0]['value']
+    else:
+        resource_type=""
+        resource=""
 
     slack_message = {
         'channel': SLACK_CHANNEL,
-        'text': "%s state is now %s: %s" % (alarm_name, new_state, reason)
+        'text': "계정 : %s(%s-%s)\n알람이름 : %s\n자원 : (%s)%s\n발생시간 : %s\n상태 : %s \n원인 : %s \n" % (account,ENVIRONMENT,PROJECT, alarm_name,resource_type,resource, real_time, new_state, reason)
     }
-
     req = Request(HOOK_URL, json.dumps(slack_message).encode('utf-8'))
     try:
         response = urlopen(req)
