@@ -37,7 +37,7 @@ from base64 import b64decode
 from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
 
-#사용자 정의 변수 추가
+# defining additional envrionmental values
 PROJECT = os.environ['Project']
 ENVIRONMENT = os.environ['Environment']
 
@@ -60,6 +60,7 @@ def lambda_handler(event, context):
     message = json.loads(event['Records'][0]['Sns']['Message'])
     logger.info("Message: " + str(message))
 
+  # default format and the values to be used 
     # alarm_name = message['AlarmName']
     # #old_state = message['OldStateValue']
     # new_state = message['NewStateValue']
@@ -70,6 +71,7 @@ def lambda_handler(event, context):
     #     'text': "%s state is now %s: %s" % (alarm_name, new_state, reason)
     # }
 
+  # modified format and values needed
     alarm_name = message['AlarmName']
     new_state = message['NewStateValue']
     reason = message['NewStateReason']
