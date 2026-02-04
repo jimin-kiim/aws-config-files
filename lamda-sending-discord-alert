@@ -19,8 +19,13 @@ def lambda_handler(event, context):
         method="POST",
         )
 
-    urllib.request.urlopen(req)
-
-    return {
-        'statusCode': 200
-    }
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            print("Discord status:", resp.status)
+            print("Discord body:", resp.read().decode("utf-8", errors="ignore"))
+            return {"statusCode": resp.status}
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8", errors="ignore")
+        print("Discord HTTPError:", e.code)
+        print("Discord error body:", body)
+        raise
