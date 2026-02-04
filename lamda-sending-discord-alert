@@ -1,0 +1,26 @@
+import json
+import urllib.request
+import os
+
+DISCORD_WEBHOOK_URL = os.environ["DISCORD_WEBHOOK_URL"]
+
+def lambda_handler(event, context):
+    message = event['Records'][0]['Sns']['Message']
+
+    payload = {
+        "content": f"**CPU Alert 발생** \n```{message}```"
+    }    
+
+    data = json.dumps(payload).encode('utf-8')
+    req = urllib.request.Request(
+        DISCORD_WEBHOOK_URL, 
+        data=data,
+        headers={"Content-Type": "application/json"},
+        method="POST",
+        )
+
+    urllib.request.urlopen(req)
+
+    return {
+        'statusCode': 200
+    }
